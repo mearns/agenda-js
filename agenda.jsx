@@ -1,13 +1,34 @@
 
+var VerticalProgressBar = React.createClass({
+    getInitialState: function() {
+        return {
+            pct: 50,
+        };
+    },
+
+    render: function() {
+        var style = {
+            height: this.state.pct + '%',
+        };
+        return (
+            <div className='VerticalProgressBar'>
+                <div className='_prog' style={style}>
+                </div>
+            </div>
+        );
+    },
+});
+
 var Task = React.createClass({
     render: function() {
         return (
             <div
-                className='task'
+                className='Task'
                 style={{
                     height: this.props.height + 'px',
                 }}
             >
+                <VerticalProgressBar />
                 <h2 className='_title'>{this.props.title}</h2>
                 <h3 className='_duration'>{this.props.duration}</h3>
             </div>
@@ -19,6 +40,7 @@ var Task = React.createClass({
 var Agenda = React.createClass({
     getDefaultProps: function() {
         return {
+            //TODO: The height isn't actually the height of the agenda, because of padding in the tasks.
             height: 300,
         }
     },
@@ -31,7 +53,7 @@ var Agenda = React.createClass({
         });
         var height = this.props.height;
         return (
-            <ul className='agenda'>
+            <ul className='Agenda'>
                 {this.props.children.map(function(child) {
                     var key = childIdx;
                     childIdx++;
