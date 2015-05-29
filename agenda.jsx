@@ -1,9 +1,32 @@
 
+var ClassableMixin = {
+
+    addClass: function(clsName) {
+        this.state.classNames.push(clsName);
+        this.setState({classNames: this.state.classNames});
+    },
+
+    classNames: function() {
+        return this.state.classNames.join(' ');
+    },
+
+};
+
 var VerticalProgressBar = React.createClass({
+
+    mixins: [ClassableMixin],
+
     getInitialState: function() {
         return {
             pct: 50,
+            classNames: []
         };
+    },
+
+    set: function(pct) {
+        if(pct >= 0 && pct <= 100) {
+            this.setState({pct: pct});
+        }
     },
 
     render: function() {
@@ -11,7 +34,7 @@ var VerticalProgressBar = React.createClass({
             height: this.state.pct + '%',
         };
         return (
-            <div className='VerticalProgressBar'>
+            <div className={'VerticalProgressBar ' + this.classNames()} >
                 <div className='_prog' style={style}>
                 </div>
             </div>
