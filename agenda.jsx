@@ -46,7 +46,6 @@ var Task = React.createClass({
     },
 
     componentDidMount: function() {
-        this.start();
     },
 
     componentWillUnmount: function () {
@@ -81,6 +80,7 @@ var Task = React.createClass({
                 style={{
                     height: this.props.height + 'px',
                 }}
+                onClick={this.start}
             >
                 <VerticalProgressBar ref='progBar' />
                 <h2 className='_title'>{this.props.title}</h2>
