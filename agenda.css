@@ -25,6 +25,10 @@ ul.Agenda {
     background: green;
 }
 
+.VerticalProgressBar._over ._prog {
+    background: red;
+}
+
 .Task h2 {
     font-size: large;
     margin: 0;

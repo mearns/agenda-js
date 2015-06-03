@@ -4,6 +4,7 @@ var VerticalProgressBar = React.createClass({
     getInitialState: function() {
         return {
             pct: 50,
+            classNames: [],
         };
     },
 
@@ -18,12 +19,20 @@ var VerticalProgressBar = React.createClass({
         }
     },
 
+    setClass: function(cls) {
+        this.setState({classNames: [cls]});
+    },
+
+    clearClass: function() {
+        this.setState({classNames: []});
+    },
+
     render: function() {
         var style = {
             height: this.state.pct + '%',
         };
         return (
-            <div className='VerticalProgressBar' >
+            <div className={'VerticalProgressBar ' + this.state.classNames.join(' ')} >
                 <div className='_prog' style={style}>
                 </div>
             </div>
@@ -68,6 +77,9 @@ var Task = React.createClass({
             if (pct > 100.0) {
                 pct = 100.0;
                 this.stop();
+                this.refs.progBar.setClass('_over');
+            } else {
+                this.refs.progBar.clearClass();
             }
             this.refs.progBar.set(pct);
         };
