@@ -1,9 +1,17 @@
 
 var VerticalProgressBar = React.createClass({
 
+    getDefaultProps: function() {
+        return {
+            init: {
+                pct: 0,
+            },
+        };
+    },
+
     getInitialState: function() {
         return {
-            pct: 50,
+            pct: this.props.init.pct,
             classNames: [],
         };
     },
