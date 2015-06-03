@@ -7,6 +7,11 @@ var VerticalProgressBar = React.createClass({
         };
     },
 
+    /**
+     * Set the state of the progress bar to the specified perctange of complete.
+     * The `pct` parameter should be a number in the closed range [0, 100]. Values
+     * outside of this range are ignored.
+     */
     set: function(pct) {
         if(pct >= 0 && pct <= 100) {
             this.setState({pct: pct});
@@ -27,6 +32,48 @@ var VerticalProgressBar = React.createClass({
 });
 
 var Task = React.createClass({
+
+    getDefaultProps: function() {
+        return {
+            rate: 50,
+        };
+    },
+
+    getInitialState: function() {
+        return {
+            startTime: null,
+        };
+    },
+
+    componentDidMount: function() {
+        this.start();
+    },
+
+    componentWillUnmount: function () {
+        clearInterval(this.timer);
+    },
+
+    start: function() {
+        this.setState({startTime: new Date()});
+        this.timer = setInterval(this.tick, this.props.rate);
+    },
+
+    stop: function() {
+        clearInterval(this.timer);
+    },
+
+    tick: function() {
+        if(this.state.startTime !== null) {
+            var elapsed = parseFloat((new Date()) - this.state.startTime) / 1000.0;
+            var pct = 100.0 * (elapsed / parseFloat(this.props.duration));
+            if (pct > 100.0) {
+                pct = 100.0;
+                this.stop();
+            }
+            this.refs.progBar.set(pct);
+        };
+    },
+
     render: function() {
         return (
             <div
@@ -35,7 +82,7 @@ var Task = React.createClass({
                     height: this.props.height + 'px',
                 }}
             >
-                <VerticalProgressBar />
+                <VerticalProgressBar ref='progBar' />
                 <h2 className='_title'>{this.props.title}</h2>
                 <h3 className='_duration'>{this.props.duration}</h3>
             </div>
