@@ -122,10 +122,11 @@ var Agenda = React.createClass({
             <ul className='Agenda'>
                 {this.props.children.map(function(child) {
                     var key = childIdx;
+                    var ref = 'task_' + childIdx;
                     childIdx++;
                     var pct = parseFloat(child.props.duration) / total;
                     return (
-                        <li key={key} ><Task {...child.props} height={height * pct} /></li>
+                        <li key={key} ><Task {...child.props} ref={ref} height={height * pct} /></li>
                     );
                 })}
             </ul>
