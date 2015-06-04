@@ -128,7 +128,6 @@ var Agenda = React.createClass({
     },
 
     clicked: function(idx, task) {
-        console.log("Clicked", idx, task);
         task.start();
         for(var i=0; i<this.props.children.length; i++) {
             if(i != idx) {
