@@ -127,8 +127,15 @@ var Agenda = React.createClass({
         }
     },
 
-    clicked: function(ref, task) {
-        console.log("Clicked", ref, task);
+    clicked: function(idx, task) {
+        console.log("Clicked", idx, task);
+        task.start();
+        for(var i=0; i<this.props.children.length; i++) {
+            if(i != idx) {
+                var ref = 'task_' + i;
+                this.refs[ref].stop();
+            }
+        }
     },
 
     render: function() {
@@ -139,7 +146,7 @@ var Agenda = React.createClass({
         });
         var height = this.props.height;
         var self = this;
-        this.tasks = this.props.children.map(function(child) {
+        var list_items = this.props.children.map(function(child) {
             var idx = childIdx;
             childIdx++;
             var key = "" + idx;
@@ -151,7 +158,7 @@ var Agenda = React.createClass({
         });
         return (
             <ul className='Agenda'>
-                {this.tasks}
+                {list_items}
             </ul>
         );
     },
