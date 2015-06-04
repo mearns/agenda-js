@@ -139,18 +139,19 @@ var Agenda = React.createClass({
         });
         var height = this.props.height;
         var self = this;
+        this.tasks = this.props.children.map(function(child) {
+            var idx = childIdx;
+            childIdx++;
+            var key = "" + idx;
+            var ref = 'task_' + idx;
+            var pct = parseFloat(child.props.duration) / total;
+            return (
+                <li key={key} ><Task {...child.props} agenda={self} idx={idx} ref={ref} height={height * pct} /></li>
+            );
+        });
         return (
             <ul className='Agenda'>
-                {this.props.children.map(function(child) {
-                    var idx = childIdx;
-                    childIdx++;
-                    var key = "" + idx;
-                    var ref = 'task_' + idx;
-                    var pct = parseFloat(child.props.duration) / total;
-                    return (
-                        <li key={key} ><Task {...child.props} agenda={self} idx={idx} ref={ref} height={height * pct} /></li>
-                    );
-                })}
+                {this.tasks}
             </ul>
         );
     },
