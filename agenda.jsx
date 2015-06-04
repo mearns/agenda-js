@@ -53,6 +53,8 @@ var Task = React.createClass({
     getDefaultProps: function() {
         return {
             rate: 50,
+            agenda: null,
+            idx: null,
         };
     },
 
@@ -67,6 +69,12 @@ var Task = React.createClass({
 
     componentWillUnmount: function () {
         clearInterval(this.timer);
+    },
+
+    clicked: function() {
+        if(this.props.agenda !== null) {
+            this.props.agenda.clicked(this.props.idx, this);
+        }
     },
 
     start: function() {
@@ -100,7 +108,7 @@ var Task = React.createClass({
                 style={{
                     height: this.props.height + 'px',
                 }}
-                onClick={this.start}
+                onClick={this.clicked}
             >
                 <VerticalProgressBar ref='progBar' />
                 <h2 className='_title'>{this.props.title}</h2>
@@ -119,6 +127,10 @@ var Agenda = React.createClass({
         }
     },
 
+    clicked: function(ref, task) {
+        console.log("Clicked", ref, task);
+    },
+
     render: function() {
         var childIdx = 0;
         var total = 0.0;
@@ -126,15 +138,17 @@ var Agenda = React.createClass({
             total += parseFloat(child.props.duration);
         });
         var height = this.props.height;
+        var self = this;
         return (
             <ul className='Agenda'>
                 {this.props.children.map(function(child) {
-                    var key = childIdx;
-                    var ref = 'task_' + childIdx;
+                    var idx = childIdx;
                     childIdx++;
+                    var key = "" + idx;
+                    var ref = 'task_' + idx;
                     var pct = parseFloat(child.props.duration) / total;
                     return (
-                        <li key={key} ><Task {...child.props} ref={ref} height={height * pct} /></li>
+                        <li key={key} ><Task {...child.props} agenda={self} idx={idx} ref={ref} height={height * pct} /></li>
                     );
                 })}
             </ul>
