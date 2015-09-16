@@ -13,6 +13,7 @@ var onload = function() {
     var totalDuration = 0;
     for(var i=0; i<agenda.length; i++) {
         totalDuration += agenda[i].duration;
+        agenda[i].lastDuration = agenda[i].duration;
     }
 
     var startTime = new Date();
@@ -34,6 +35,19 @@ var onload = function() {
                 if(pct >= 1.0) {
                     pct = 1.0;
                     overflow = remainingTime - task.duration;
+
+                    var timeRequired = 0;
+                    for(var j=i+1; j<agenda.length; j++) {
+                        timeRequired += agenda[j].duration;
+                    }
+                    if(timeRequired > 0) {
+                        for(var j=i+1; j<agenda.length; j++) {
+                            agenda[j].duration = agenda[j].lastDuration - overflow * (agenda[j].duration / timeRequired);
+                            if(agenda[j].duration < 0) {
+                                agenda[j].duration = 0;
+                            }
+                        }
+                    }
                 }
                 remainingTime = 0;
             } else if(i < currentIdx) {
@@ -69,7 +83,7 @@ var onload = function() {
             }
         }
 
-        if(elapsedTime > 6 || currentIdx >= agenda.length) {
+        if(elapsedTime > 12 || currentIdx >= agenda.length) {
             clearInterval(timer);
         }
     }
