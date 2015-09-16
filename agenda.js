@@ -28,11 +28,12 @@ var onload = function() {
             var task = agenda[i];
 
             var pct = 0;
+            var overflow = 0;
             if(i == currentIdx) {
                 pct = remainingTime / task.duration;
                 if(pct >= 1.0) {
                     pct = 1.0;
-                    currentIdx++;
+                    overflow = remainingTime - task.duration;
                 }
                 remainingTime = 0;
             } else if(i < currentIdx) {
@@ -55,9 +56,20 @@ var onload = function() {
                     .ele("h3").text(task.duration).up()
 
             agendaEle.appendChild(taskBuilder.build());
+
+            if(overflow) {
+                new HtmlBuilder(null, "div")
+                    .addClass("Task").addClass("Overflow")
+                    .style("height", (totalHeight * (overflow / totalDuration)) + "px")
+                    .ele("div")
+                        .addClass("VerticalProgressBar")
+                        .ele("div").addClass("_prog").style("height", "100%").up()
+                    .up()
+                    .appendTo(agendaEle);
+            }
         }
 
-        if(currentIdx >= agenda.length) {
+        if(elapsedTime > 6 || currentIdx >= agenda.length) {
             clearInterval(timer);
         }
     }

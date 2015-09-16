@@ -56,6 +56,10 @@ function HtmlBuilder(parent, tagName) {
         self._children.push(new _TextNodeBuilder(self, text));
         return self;
     };
+
+    this.appendTo = function(ele) {
+        ele.appendChild(this.build());
+    };
 }
 
 function _TextNodeBuilder(parent, text) {
