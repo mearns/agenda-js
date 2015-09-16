@@ -127,47 +127,34 @@ var Agenda = React.createClass({
         }
     },
 
-    clicked: function(idx, task) {
-        task.start();
-        for(var i=0; i<this.props.children.length; i++) {
-            if(i != idx) {
-                var ref = 'task_' + i;
-                this.refs[ref].stop();
-            }
-        }
-    },
-
     render: function() {
-        var childIdx = 0;
-        var total = 0.0;
-        this.props.children.forEach(function(child) {
-            total += parseFloat(child.props.duration);
-        });
         var height = this.props.height;
-        var self = this;
-        var list_items = this.props.children.map(function(child) {
-            var idx = childIdx;
-            childIdx++;
+        var total_duration = 0;
+        this.props.tasks.forEach(function(task) {
+            total_duration += task.duration;
+        });
+        var task_elements = this.props.tasks.map(function(task, idx) {
             var key = "" + idx;
             var ref = 'task_' + idx;
-            var pct = parseFloat(child.props.duration) / total;
+            var pct = parseFloat(task.duration) / total_duration;
             return (
-                <li key={key} ><Task {...child.props} agenda={self} idx={idx} ref={ref} height={height * pct} /></li>
+                <li key={key} ><Task {...task} agenda={self} idx={idx} ref={ref} height={height * pct} /></li>
             );
-        });
+        }, this);
         return (
             <ul className='Agenda'>
-                {list_items}
+                {task_elements}
             </ul>
         );
     },
 });
 
 React.render(
-  <Agenda>
-    <Task duration='10' title='First Task' />
-    <Task duration='20' title='Second Task' />
-    <Task duration='8' title='Third Task' />
+  <Agenda tasks={[
+    {duration: 10, title: 'First Task'},
+    {duration: 20, title: 'Second Task'},
+    {duration: 8, title: 'Third Task'},
+  ]}>
   </Agenda>,
   document.body
 );
