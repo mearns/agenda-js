@@ -16,12 +16,38 @@ var onload = function() {
         agenda[i].lastDuration = agenda[i].duration;
     }
 
+    var runtime = 0;
     var startTime = new Date();
     var currentIdx = 0;
+    var timer = null;
+    var running = false;
+    var rate = 50;
+
+    var togglePaused = function() {
+        if(running) {
+            if(timer !== null) {
+                clearInterval(timer);
+                timer = null;
+            }
+            running = false;
+            runtime += parseFloat((new Date()) - startTime) / 1000.0;
+        }
+        else {
+            running = true;
+            startTime = new Date();
+            timer = setInterval(tick, rate);
+        }
+    };
+
+    window.onkeydown = function(evt) {
+        if(evt.keyCode == 27) {    //esc
+            togglePaused();
+        }
+    };
 
     function tick() {
 
-        var elapsedTime = parseFloat((new Date()) - startTime) / 1000.0;
+        var elapsedTime = runtime + parseFloat((new Date()) - startTime) / 1000.0;
         var remainingTime = elapsedTime;
 
         agendaEle.innerHTML = "";
@@ -88,7 +114,8 @@ var onload = function() {
         }
     }
 
-    var timer = setInterval(tick, 50);
+    running = true;
+    timer = setInterval(tick, rate);
 
 };
 
