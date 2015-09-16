@@ -39,8 +39,18 @@ var onload = function() {
         }
     };
 
+    var next = function() {
+        currentIdx++;
+        for(var i=currentIdx; i<agenda.length; i++) {
+            agenda[i].lastDuration = agenda[i].duration;
+        }
+    };
+
     window.onkeydown = function(evt) {
-        if(evt.keyCode == 27) {    //esc
+        if(evt.keyCode == 32) { //space
+            next();
+        }
+        else if(evt.keyCode == 27) {    //esc
             togglePaused();
         }
     };
