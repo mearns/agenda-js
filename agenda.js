@@ -1,6 +1,6 @@
 
 var agenda = [
-    {duration: 3, title: "First Task"},
+    {duration: 1, title: "First Task"},
     {duration: 6, title: "Second Task"},
     {duration: 2, title: "Third Task"},
 ];
@@ -60,6 +60,7 @@ var Agenda = function(taskList, ele) {
     this._rate = 50;
     this._ele = ele;
     this._running = false;
+    this._totalDeficit = 0;
 
     this._tasks = [];
     this._totalDuration = 0;
@@ -72,10 +73,15 @@ var Agenda = function(taskList, ele) {
         this._ele.appendChild(task.getElement());
     }
 
-    var timeScale = this._totalHeight / this._totalDuration;
+    this._timeScale = this._totalHeight / this._totalDuration;
     for(var i=0; i<this._tasks.length; i++) {
-        this._tasks[i].setTimeScale(timeScale);
+        this._tasks[i].setTimeScale(this._timeScale);
     }
+
+    this._deficitEle = (new HtmlBuilder(null, "div"))
+        .addClass("Deficit").addClass("Task")
+        .style("height", "0")
+        .build();
 
     $(document).keydown(function(event) {
         switch(event.which) {
@@ -92,17 +98,24 @@ var Agenda = function(taskList, ele) {
 
     this.start = function() {
         self._running = true;
-        self._startTime = new Date();
+        self._currentTaskDeficit = 0;
         self._currentIdx = 0;
-        self._currentTask = self._tasks[self._currentIdx];
+        self._selectCurrentIdx();
         self._timer = setInterval(self._tick, self._rate);
+    };
+
+    this._selectCurrentIdx = function() {
+        self._startTime = new Date();
+        self._totalDeficit += self._currentTaskDeficit;
+        self._currentTaskDeficit = 0;
+        self._currentTask = self._tasks[self._currentIdx];
+        $(self._currentTask.getElement()).after(self._deficitEle);
     };
 
     this._next = function() {
         if (self._currentIdx+1 < self._tasks.length) {
             self._currentIdx++;
-            self._currentTask = self._tasks[self._currentIdx];
-            self._startTime = new Date();
+            self._selectCurrentIdx();
         } else {
             clearInterval(self._timer);
             self._running = false;
@@ -118,7 +131,9 @@ var Agenda = function(taskList, ele) {
         self._currentTask.setPercentComplete(pctTaskComplete);
 
         if(pctTaskComplete >= 1.0) {
-            self._next();
+            self._currentTaskDeficit = (elapsedTime - self._currentTask.getDuration());
+            deficit = self._totalDeficit + self._currentTaskDeficit;
+            self._deficitEle.style.height = (deficit * self._timeScale) + 'px';
         }
     }
 
