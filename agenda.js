@@ -1,7 +1,7 @@
 
 var agenda = [
     {duration: 1, title: "First Task"},
-    {duration: 6, title: "Second Task"},
+    {duration: 2, title: "Second Task"},
     {duration: 2, title: "Third Task"},
 ];
 
@@ -19,10 +19,14 @@ var Task = function(duration, title) {
                     .addClass("VerticalProgressBar")
                     .add(this._progressBarFill)
                     .build();
+    this._pctCompleteNode = document.createTextNode("-");
     this._ele = 
             new HtmlBuilder(null, "div")
                 .addClass("Task")
                 .add(this._progressBar)
+                .ele("p").addClass("pct-complete")
+                    .ele("span").add(this._pctCompleteNode).up()
+                .up()
                 .ele("h2").text(this._title).up()
                 .ele("h3").text(this._duration).up()
                 .build()
@@ -40,6 +44,8 @@ var Task = function(duration, title) {
         } else {
             height = (pct * 100) + '%'
         }
+
+        this._pctCompleteNode.nodeValue = parseInt(pct * 100) + '%';
             
         this._progressBarFill.style.height = height;
     };
@@ -56,11 +62,14 @@ var Task = function(duration, title) {
 var Agenda = function(taskList, ele) {
 
     var self = this;
-    this._totalHeight = 600;
+    this._totalHeight = 300;
     this._rate = 50;
     this._ele = ele;
-    this._running = false;
-    this._totalDeficit = 0;
+    this._pastDeficit = 0;
+
+    this._pastRunTime = 0;
+    this._pastTimeInTask = 0;
+    this._runningSince = null;
 
     this._tasks = [];
     this._totalDuration = 0;
@@ -86,7 +95,7 @@ var Agenda = function(taskList, ele) {
     $(document).keydown(function(event) {
         switch(event.which) {
             case 32:    //space-bar
-                if(!self._running) {
+                if(!self.isRunning()) {
                     self.start();
                 }
                 else {
@@ -96,44 +105,91 @@ var Agenda = function(taskList, ele) {
         }
     });
 
+    /**
+     * returns the total number of seconds that you've been in the current task.
+     */
+    this.getTimeInTask = function() {
+        if(self._runningSince == null) {
+            return self._pastTimeInTask;
+        }
+        return self._pastTimeInTask + parseFloat((new Date() - self._runningSince)) / 1000.0;
+    };
+
+    /**
+     * Returns the total number of seconds you've been running this agenda.
+     */
+    this.getTotalRunTime = function() {
+        return self._pastRunTime + self.getTimeInTask();
+    };
+
+    this.isRunning = function() {
+        return self._runningSince !== null;
+    };
+
     this.start = function() {
-        self._running = true;
-        self._currentTaskDeficit = 0;
+        self._runningSince = new Date();
+
+        //Reset timing accumulators.
+        self._pastRunTime = 0;
+        self._pastDeficit = 0;
+
+        //select the current task.
         self._currentIdx = 0;
-        self._selectCurrentIdx();
+        self._currentTask = self._tasks[self._currentIdx];
+        self._pastTimeInTask = 0;
+            
+        //Place the deficit tracker after this task.
+        $(self._currentTask.getElement()).after(self._deficitEle);
+
+        //Kick off the run.
         self._timer = setInterval(self._tick, self._rate);
     };
 
-    this._selectCurrentIdx = function() {
-        self._startTime = new Date();
-        self._totalDeficit += self._currentTaskDeficit;
-        self._currentTaskDeficit = 0;
-        self._currentTask = self._tasks[self._currentIdx];
-        $(self._currentTask.getElement()).after(self._deficitEle);
-    };
-
     this._next = function() {
+        var newRunTime = new Date();
+
+        //Get the total time the previous task was running.
+        var prevRunTime = self._pastTimeInTask;
+        if(self._runningSince !== null) {
+            prevRunTime += parseFloat(newRunTime - self._runningSince) / 1000.0;
+        }
+
+        //Add into total runtime accumulator.
+        self._pastRunTime += prevRunTime;
+
+        //Update deficit
+        var taskDeficit = (prevRunTime - self._currentTask.getDuration());
+        self._pastDeficit += taskDeficit;
         if (self._currentIdx+1 < self._tasks.length) {
             self._currentIdx++;
-            self._selectCurrentIdx();
+            self._currentTask = self._tasks[self._currentIdx];
+
+            //Reset in-task timings.
+            self._runningSince = newRunTime;
+            self._pastTimeInTask = 0;
+
+            //Move the deficit tracker after this task.
+            $(self._currentTask.getElement()).after(self._deficitEle);
+
         } else {
             clearInterval(self._timer);
-            self._running = false;
+            self._runningSince = null;
             console.log("Done");
         }
     };
 
     this._tick = function() {
 
-        var elapsedTime = parseFloat((new Date()) - self._startTime) / 1000.0;
+        //How long have we been running in this task (since resume).
+        var elapsedTime = self.getTimeInTask();
 
         var pctTaskComplete = elapsedTime / self._currentTask.getDuration();
         self._currentTask.setPercentComplete(pctTaskComplete);
 
         if(pctTaskComplete >= 1.0) {
-            self._currentTaskDeficit = (elapsedTime - self._currentTask.getDuration());
-            deficit = self._totalDeficit + self._currentTaskDeficit;
-            self._deficitEle.style.height = (deficit * self._timeScale) + 'px';
+            var taskDeficit = (elapsedTime - self._currentTask.getDuration());
+            var totalDeficit = self._pastDeficit + taskDeficit;
+            self._deficitEle.style.height = (totalDeficit * self._timeScale) + 'px';
         }
     }
 

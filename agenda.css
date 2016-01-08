@@ -47,4 +47,8 @@ ul.Agenda {
     background-color: #c33;
 }
 
+.Task .pct-complete {
+    float: right;
+}
+
 
