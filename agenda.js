@@ -59,6 +59,7 @@ var Agenda = function(taskList, ele) {
     this._totalHeight = 600;
     this._rate = 50;
     this._ele = ele;
+    this._running = false;
 
     this._tasks = [];
     this._totalDuration = 0;
@@ -76,7 +77,21 @@ var Agenda = function(taskList, ele) {
         this._tasks[i].setTimeScale(timeScale);
     }
 
+    $(document).keydown(function(event) {
+        switch(event.which) {
+            case 32:    //space-bar
+                if(!self._running) {
+                    self.start();
+                }
+                else {
+                    self._next();
+                }
+                break;
+        }
+    });
+
     this.start = function() {
+        self._running = true;
         self._startTime = new Date();
         self._currentIdx = 0;
         self._currentTask = self._tasks[self._currentIdx];
@@ -90,6 +105,7 @@ var Agenda = function(taskList, ele) {
             self._startTime = new Date();
         } else {
             clearInterval(self._timer);
+            self._running = false;
             console.log("Done");
         }
     };
