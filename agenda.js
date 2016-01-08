@@ -209,6 +209,8 @@ var Agenda = function(taskList, ele) {
         var pctTaskComplete = elapsedTime / self._currentTask.getDuration();
         self._currentTask.setPercentComplete(pctTaskComplete);
 
+        //XXX: Next up, handle surplus time in next().
+
         if(pctTaskComplete >= 1.0) {
 
             //Update the deficit.
