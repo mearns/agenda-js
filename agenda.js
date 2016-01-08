@@ -10,6 +10,7 @@ var Task = function(duration, title) {
 
     var self = this;
 
+    this._originalDuration = duration;
     this._duration = duration;
     this._title = title;
     this._progressBarFill = (new HtmlBuilder(null, "div"))
@@ -45,13 +46,19 @@ var Task = function(duration, title) {
             height = (pct * 100) + '%'
         }
 
-        this._pctCompleteNode.nodeValue = parseInt(pct * 100) + '%';
+        self._pctCompleteNode.nodeValue = parseInt(pct * 100) + '%';
             
-        this._progressBarFill.style.height = height;
+        self._progressBarFill.style.height = height;
     };
 
     this.setTimeScale = function(timeScale) {
-        this._ele.style.height = (this._duration * timeScale) + 'px';
+        self._timeScale = timeScale;
+        self._ele.style.height = (self._duration * timeScale) + 'px';
+    };
+
+    this.setAvailableDuration = function(duration) {
+        self._duration = duration;
+        self.setTimeScale(self._timeScale);
     };
     
     this.getDuration = function() {
@@ -141,6 +148,8 @@ var Agenda = function(taskList, ele) {
         //Place the deficit tracker with this task.
         $(self._currentTask.getElement()).before(self._deficitEle);
 
+        self._calculateWeights();
+
         //Kick off the run.
         self._timer = setInterval(self._tick, self._rate);
     };
@@ -171,10 +180,24 @@ var Agenda = function(taskList, ele) {
             //Move the deficit tracker with this task.
             $(self._currentTask.getElement()).before(self._deficitEle);
 
+            //Update weights.
+            self._calculateWeights();
+
         } else {
             clearInterval(self._timer);
             self._runningSince = null;
             console.log("Done");
+        }
+    };
+
+    this._calculateWeights = function() {
+        self._weights = [];
+        var total = 0;
+        for(var i=self._currentIdx+1; i<self._tasks.length; i++) {
+            total += self._tasks[i].getDuration();
+        }
+        for(var i=self._currentIdx+1; i<self._tasks.length; i++) {
+            self._weights[i-self._currentIdx-1] = self._tasks[i].getDuration() / total;
         }
     };
 
@@ -192,6 +215,19 @@ var Agenda = function(taskList, ele) {
             var taskDeficit = (elapsedTime - self._currentTask.getDuration());
             var totalDeficit = self._pastDeficit + taskDeficit;
             self._deficitEle.style.height = (totalDeficit * self._timeScale) + 'px';
+
+            //See how much time we have left in the whole presentation.
+            var timeRemaining = self._totalDuration - self.getTotalRunTime();
+            if(timeRemaining > 0) {
+                //Divvy it up
+                var total = 0;
+                for(var i=self._currentIdx+1; i<self._tasks.length-1; i++) {
+                    var t = timeRemaining * self._weights[i - self._currentIdx - 1];
+                    total += t;
+                    self._tasks[i].setAvailableDuration(t);
+                }
+                self._tasks[self._tasks.length-1].setAvailableDuration(timeRemaining - total);
+            }
         }
     }
 
