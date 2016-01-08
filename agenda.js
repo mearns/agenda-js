@@ -53,49 +53,62 @@ var Task = function(duration, title) {
     };
 }
 
-var onload = function() {
+var Agenda = function(taskList, ele) {
 
-    var totalHeight = 600;
-    var tasks = [];
-    
-    var agendaEle = document.getElementById("agenda");
-    var totalDuration = 0;
+    var self = this;
+    this._totalHeight = 600;
+    this._rate = 50;
+    this._ele = ele;
+
+    this._tasks = [];
+    this._totalDuration = 0;
     for(var i=0; i<agenda.length; i++) {
-        totalDuration += agenda[i].duration;
+        this._totalDuration += taskList[i].duration;
 
         //Build an element to represent this task.
-        var task = new Task(agenda[i].duration, agenda[i].title);
-        tasks.push(task);
-        agendaEle.appendChild(task.getElement());
+        var task = new Task(taskList[i].duration, taskList[i].title);
+        this._tasks.push(task);
+        this._ele.appendChild(task.getElement());
     }
 
-    var timeScale = totalHeight / totalDuration;
-    for(var i=0; i<tasks.length; i++) {
-        tasks[i].setTimeScale(timeScale);
+    var timeScale = this._totalHeight / this._totalDuration;
+    for(var i=0; i<this._tasks.length; i++) {
+        this._tasks[i].setTimeScale(timeScale);
     }
 
-    var runtime = 0;
-    var startTime = new Date();
-    var currentIdx = 0;
-    var currentTask = tasks[currentIdx];
-    var timer = null;
-    var rate = 50;
+    this.start = function() {
+        self._startTime = new Date();
+        self._currentIdx = 0;
+        self._currentTask = self._tasks[self._currentIdx];
+        self._timer = setInterval(self._tick, self._rate);
+    };
 
-    function tick() {
-
-        var elapsedTime = runtime + parseFloat((new Date()) - startTime) / 1000.0;
-
-        var pctTaskComplete = elapsedTime / currentTask.getDuration();
-        currentTask.setPercentComplete(pctTaskComplete);
-
-        if(pctTaskComplete >= 1.0) {
-            clearInterval(timer);
+    this._next = function() {
+        if (self._currentIdx+1 < self._tasks.length) {
+            self._currentIdx++;
+            self._currentTask = self._tasks[self._currentIdx];
+            self._startTime = new Date();
+        } else {
+            clearInterval(self._timer);
             console.log("Done");
         }
+    };
 
+    this._tick = function() {
+
+        var elapsedTime = parseFloat((new Date()) - self._startTime) / 1000.0;
+
+        var pctTaskComplete = elapsedTime / self._currentTask.getDuration();
+        self._currentTask.setPercentComplete(pctTaskComplete);
+
+        if(pctTaskComplete >= 1.0) {
+            self._next();
+        }
     }
 
-    timer = setInterval(tick, rate);
+};
 
+var onload = function() {
+    (new Agenda(agenda, document.getElementById("agenda"))).start();
 };
 
