@@ -5,126 +5,96 @@ var agenda = [
     {duration: 2, title: "Third Task"},
 ];
 
+
+var Task = function(duration, title) {
+
+    var self = this;
+
+    this._duration = duration;
+    this._title = title;
+    this._progressBarFill = (new HtmlBuilder(null, "div"))
+                    .addClass("_prog").style("height", "0")
+                    .build();
+    this._progressBar = (new HtmlBuilder(null, "div"))
+                    .addClass("VerticalProgressBar")
+                    .add(this._progressBarFill)
+                    .build();
+    this._ele = 
+            new HtmlBuilder(null, "div")
+                .addClass("Task")
+                .add(this._progressBar)
+                .ele("h2").text(this._title).up()
+                .ele("h3").text(this._duration).up()
+                .build()
+
+    this.getElement = function() {
+        return self._ele;
+    };
+
+    this.setPercentComplete = function(pct) {
+        var height;
+        if(pct <= 0) {
+            height = '0';
+        } else if (pct >= 1) {
+            height = '100%';
+        } else {
+            height = (pct * 100) + '%'
+        }
+            
+        this._progressBarFill.style.height = height;
+    };
+
+    this.setTimeScale = function(timeScale) {
+        this._ele.style.height = (this._duration * timeScale) + 'px';
+    };
+    
+    this.getDuration = function() {
+        return this._duration;
+    };
+}
+
 var onload = function() {
 
     var totalHeight = 600;
+    var tasks = [];
     
     var agendaEle = document.getElementById("agenda");
     var totalDuration = 0;
     for(var i=0; i<agenda.length; i++) {
         totalDuration += agenda[i].duration;
-        agenda[i].lastDuration = agenda[i].duration;
+
+        //Build an element to represent this task.
+        var task = new Task(agenda[i].duration, agenda[i].title);
+        tasks.push(task);
+        agendaEle.appendChild(task.getElement());
+    }
+
+    var timeScale = totalHeight / totalDuration;
+    for(var i=0; i<tasks.length; i++) {
+        tasks[i].setTimeScale(timeScale);
     }
 
     var runtime = 0;
     var startTime = new Date();
     var currentIdx = 0;
+    var currentTask = tasks[currentIdx];
     var timer = null;
-    var running = false;
     var rate = 50;
-
-    var togglePaused = function() {
-        if(running) {
-            if(timer !== null) {
-                clearInterval(timer);
-                timer = null;
-            }
-            running = false;
-            runtime += parseFloat((new Date()) - startTime) / 1000.0;
-        }
-        else {
-            running = true;
-            startTime = new Date();
-            timer = setInterval(tick, rate);
-        }
-    };
-
-    var next = function() {
-        currentIdx++;
-        for(var i=currentIdx; i<agenda.length; i++) {
-            agenda[i].lastDuration = agenda[i].duration;
-        }
-    };
-
-    window.onkeydown = function(evt) {
-        if(evt.keyCode == 32) { //space
-            next();
-        }
-        else if(evt.keyCode == 27) {    //esc
-            togglePaused();
-        }
-    };
 
     function tick() {
 
         var elapsedTime = runtime + parseFloat((new Date()) - startTime) / 1000.0;
-        var remainingTime = elapsedTime;
 
-        agendaEle.innerHTML = "";
-        for(var i=0; i<agenda.length; i++) {
-            var task = agenda[i];
+        var pctTaskComplete = elapsedTime / currentTask.getDuration();
+        currentTask.setPercentComplete(pctTaskComplete);
 
-            var pct = 0;
-            var overflow = 0;
-            if(i == currentIdx) {
-                pct = remainingTime / task.duration;
-                if(pct >= 1.0) {
-                    pct = 1.0;
-                    overflow = remainingTime - task.duration;
-
-                    var timeRequired = 0;
-                    for(var j=i+1; j<agenda.length; j++) {
-                        timeRequired += agenda[j].duration;
-                    }
-                    if(timeRequired > 0) {
-                        for(var j=i+1; j<agenda.length; j++) {
-                            agenda[j].duration = agenda[j].lastDuration - overflow * (agenda[j].duration / timeRequired);
-                            if(agenda[j].duration < 0) {
-                                agenda[j].duration = 0;
-                            }
-                        }
-                    }
-                }
-                remainingTime = 0;
-            } else if(i < currentIdx) {
-                pct = 1.0;
-                remainingTime -= task.duration;
-            } else {
-                pct = 0.0;
-            }
-            pct *= 100.0;
-
-            var taskBuilder =
-                new HtmlBuilder(null, "div")
-                    .addClass("Task")
-                    .style("height", (totalHeight * (task.duration / totalDuration)) + "px")
-                    .ele("div")
-                        .addClass("VerticalProgressBar")
-                        .ele("div").addClass("_prog").style("height", pct + "%").up()
-                    .up()
-                    .ele("h2").text(task.title).up()
-                    .ele("h3").text(task.duration).up()
-
-            agendaEle.appendChild(taskBuilder.build());
-
-            if(overflow) {
-                new HtmlBuilder(null, "div")
-                    .addClass("Task").addClass("Overflow")
-                    .style("height", (totalHeight * (overflow / totalDuration)) + "px")
-                    .ele("div")
-                        .addClass("VerticalProgressBar")
-                        .ele("div").addClass("_prog").style("height", "100%").up()
-                    .up()
-                    .appendTo(agendaEle);
-            }
-        }
-
-        if(elapsedTime > 12 || currentIdx >= agenda.length) {
+        if(pctTaskComplete >= 1.0) {
             clearInterval(timer);
+            console.log("Done");
         }
+
     }
 
-    running = true;
     timer = setInterval(tick, rate);
 
 };

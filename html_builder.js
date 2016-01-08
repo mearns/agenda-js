@@ -57,6 +57,11 @@ function HtmlBuilder(parent, tagName) {
         return self;
     };
 
+    this.add = function(element) {
+        self._children.push(new _ElementBuilder(self, element));
+        return self;
+    }
+
     this.appendTo = function(ele) {
         ele.appendChild(this.build());
     };
@@ -77,6 +82,22 @@ function _TextNodeBuilder(parent, text) {
         }
         return self._parent;
     };
+}
 
+function _ElementBuilder(parent, ele) {
+    var self = this;
+    this._parent = parent;
+    this._ele = ele;
+
+    this.build = function() {
+        return this._ele;
+    }
+
+    this.up = function() {
+        if(self._parent == null) {
+            return self;
+        }
+        return self._parent;
+    };
 }
 
