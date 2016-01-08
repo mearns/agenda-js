@@ -138,8 +138,8 @@ var Agenda = function(taskList, ele) {
         self._currentTask = self._tasks[self._currentIdx];
         self._pastTimeInTask = 0;
             
-        //Place the deficit tracker after this task.
-        $(self._currentTask.getElement()).after(self._deficitEle);
+        //Place the deficit tracker with this task.
+        $(self._currentTask.getElement()).before(self._deficitEle);
 
         //Kick off the run.
         self._timer = setInterval(self._tick, self._rate);
@@ -168,8 +168,8 @@ var Agenda = function(taskList, ele) {
             self._runningSince = newRunTime;
             self._pastTimeInTask = 0;
 
-            //Move the deficit tracker after this task.
-            $(self._currentTask.getElement()).after(self._deficitEle);
+            //Move the deficit tracker with this task.
+            $(self._currentTask.getElement()).before(self._deficitEle);
 
         } else {
             clearInterval(self._timer);
@@ -187,6 +187,8 @@ var Agenda = function(taskList, ele) {
         self._currentTask.setPercentComplete(pctTaskComplete);
 
         if(pctTaskComplete >= 1.0) {
+
+            //Update the deficit.
             var taskDeficit = (elapsedTime - self._currentTask.getDuration());
             var totalDeficit = self._pastDeficit + taskDeficit;
             self._deficitEle.style.height = (totalDeficit * self._timeScale) + 'px';
