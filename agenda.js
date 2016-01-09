@@ -6,37 +6,39 @@ var agenda = [
 ];
 
 
-var Task = function(duration, title) {
+var Task = function(duration, title, timeScale) {
 
     var self = this;
 
-    this._originalDuration = duration;
-    this._duration = duration;
-    this._title = title;
-    this._progressBarFill = (new HtmlBuilder(null, "div"))
+    self._originalDuration = duration;
+    self._duration = duration;
+    self._title = title;
+    self._timeScale = timeScale;
+    self._progressBarFill = (new HtmlBuilder(null, "div"))
                     .addClass("_prog").style("height", "0")
                     .build();
-    this._progressBar = (new HtmlBuilder(null, "div"))
+    self._progressBar = (new HtmlBuilder(null, "div"))
                     .addClass("VerticalProgressBar")
-                    .add(this._progressBarFill)
+                    .add(self._progressBarFill)
                     .build();
-    this._pctCompleteNode = document.createTextNode("-");
-    this._ele = 
+    self._pctCompleteNode = document.createTextNode("-");
+    self._ele = 
             new HtmlBuilder(null, "div")
                 .addClass("Task")
-                .add(this._progressBar)
+                .style("height", (self._duration * self._timeScale) + 'px')
+                .add(self._progressBar)
                 .ele("p").addClass("pct-complete")
-                    .ele("span").add(this._pctCompleteNode).up()
+                    .ele("span").add(self._pctCompleteNode).up()
                 .up()
-                .ele("h2").text(this._title).up()
-                .ele("h3").text(this._duration).up()
+                .ele("h2").text(self._title).up()
+                .ele("h3").text(self._duration).up()
                 .build()
 
-    this.getElement = function() {
+    self.getElement = function() {
         return self._ele;
     };
 
-    this.setPercentComplete = function(pct) {
+    self.setPercentComplete = function(pct) {
         var height;
         if(pct <= 0) {
             height = '0';
@@ -51,50 +53,43 @@ var Task = function(duration, title) {
         self._progressBarFill.style.height = height;
     };
 
-    this.setTimeScale = function(timeScale) {
-        self._timeScale = timeScale;
+    self.setAvailableDuration = function(duration) {
+        self._duration = duration;
         self._ele.style.height = (self._duration * timeScale) + 'px';
     };
-
-    this.setAvailableDuration = function(duration) {
-        self._duration = duration;
-        self.setTimeScale(self._timeScale);
-    };
     
-    this.getDuration = function() {
-        return this._duration;
+    self.getDuration = function() {
+        return self._duration;
     };
 }
 
 var Agenda = function(taskList, ele) {
 
     var self = this;
-    this._totalHeight = 300;
-    this._rate = 50;
-    this._ele = ele;
-    this._pastDeficit = 0;
+    self._totalHeight = 300;
+    self._rate = 50;
+    self._ele = ele;
+    self._pastDeficit = 0;
 
-    this._pastRunTime = 0;
-    this._pastTimeInTask = 0;
-    this._runningSince = null;
+    self._pastRunTime = 0;
+    self._pastTimeInTask = 0;
+    self._runningSince = null;
 
-    this._tasks = [];
-    this._totalDuration = 0;
-    for(var i=0; i<agenda.length; i++) {
-        this._totalDuration += taskList[i].duration;
-
-        //Build an element to represent this task.
-        var task = new Task(taskList[i].duration, taskList[i].title);
-        this._tasks.push(task);
-        this._ele.appendChild(task.getElement());
+    self._tasks = [];
+    self._totalDuration = 0;
+    for(var i=0; i<taskList.length; i++) {
+        self._totalDuration += taskList[i].duration;
     }
 
-    this._timeScale = this._totalHeight / this._totalDuration;
-    for(var i=0; i<this._tasks.length; i++) {
-        this._tasks[i].setTimeScale(this._timeScale);
+    self._timeScale = self._totalHeight / self._totalDuration;
+    for(var i=0; i<taskList.length; i++) {
+        //Build an element to represent self task.
+        var task = new Task(taskList[i].duration, taskList[i].title, self._timeScale);
+        self._tasks.push(task);
+        self._ele.appendChild(task.getElement());
     }
 
-    this._deficitEle = (new HtmlBuilder(null, "div"))
+    self._deficitEle = (new HtmlBuilder(null, "div"))
         .addClass("Deficit").addClass("Task")
         .style("height", "0")
         .build();
@@ -115,7 +110,7 @@ var Agenda = function(taskList, ele) {
     /**
      * returns the total number of seconds that you've been in the current task.
      */
-    this.getTimeInTask = function() {
+    self.getTimeInTask = function() {
         if(self._runningSince == null) {
             return self._pastTimeInTask;
         }
@@ -123,17 +118,17 @@ var Agenda = function(taskList, ele) {
     };
 
     /**
-     * Returns the total number of seconds you've been running this agenda.
+     * Returns the total number of seconds you've been running self agenda.
      */
-    this.getTotalRunTime = function() {
+    self.getTotalRunTime = function() {
         return self._pastRunTime + self.getTimeInTask();
     };
 
-    this.isRunning = function() {
+    self.isRunning = function() {
         return self._runningSince !== null;
     };
 
-    this.start = function() {
+    self.start = function() {
         self._runningSince = new Date();
 
         //Reset timing accumulators.
@@ -145,7 +140,7 @@ var Agenda = function(taskList, ele) {
         self._currentTask = self._tasks[self._currentIdx];
         self._pastTimeInTask = 0;
             
-        //Place the deficit tracker with this task.
+        //Place the deficit tracker with self task.
         $(self._currentTask.getElement()).before(self._deficitEle);
 
         self._calculateWeights();
@@ -154,7 +149,7 @@ var Agenda = function(taskList, ele) {
         self._timer = setInterval(self._tick, self._rate);
     };
 
-    this._next = function() {
+    self._next = function() {
         var newRunTime = new Date();
 
         //Get the total time the previous task was running.
@@ -177,7 +172,7 @@ var Agenda = function(taskList, ele) {
             self._runningSince = newRunTime;
             self._pastTimeInTask = 0;
 
-            //Move the deficit tracker with this task.
+            //Move the deficit tracker with self task.
             $(self._currentTask.getElement()).before(self._deficitEle);
 
             //Update weights.
@@ -190,7 +185,7 @@ var Agenda = function(taskList, ele) {
         }
     };
 
-    this._calculateWeights = function() {
+    self._calculateWeights = function() {
         self._weights = [];
         var total = 0;
         for(var i=self._currentIdx+1; i<self._tasks.length; i++) {
@@ -201,9 +196,9 @@ var Agenda = function(taskList, ele) {
         }
     };
 
-    this._tick = function() {
+    self._tick = function() {
 
-        //How long have we been running in this task (since resume).
+        //How long have we been running in self task (since resume).
         var elapsedTime = self.getTimeInTask();
 
         var pctTaskComplete = elapsedTime / self._currentTask.getDuration();
