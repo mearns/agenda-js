@@ -38,7 +38,8 @@ var Task = function(duration, title, timeScale) {
         return self._ele;
     };
 
-    self.setPercentComplete = function(pct) {
+    self.setTimeElapsed = function(seconds) {
+        var pct = seconds / self._duration;
         var height;
         if(pct <= 0) {
             height = '0';
@@ -202,7 +203,7 @@ var Agenda = function(taskList, ele) {
         var elapsedTime = self.getTimeInTask();
 
         var pctTaskComplete = elapsedTime / self._currentTask.getDuration();
-        self._currentTask.setPercentComplete(pctTaskComplete);
+        self._currentTask.setTimeElapsed(elapsedTime);
 
         //XXX: Next up, handle surplus time in next().
 
