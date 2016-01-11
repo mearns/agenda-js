@@ -16,7 +16,9 @@ function HtmlBuilder(parent, tagName) {
         for(var i=0; i<self._style.length; i++) {
             ele.style[self._style[i][0]] = self._style[i][1];
         }
-        ele.className = this._classes.join(" ");
+        if(this._classes.length > 0) {
+            ele.className = this._classes.join(" ");
+        }
 
         for(var i=0; i<self._children.length; i++) {
             ele.appendChild(self._children[i].build());

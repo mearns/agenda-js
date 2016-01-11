@@ -255,43 +255,64 @@ var Agenda = function(taskList, cfg, ele) {
     self._pastTimeInTask = 0;
     self._runningSince = null;
     self._state = "stopped";
+    self._pastOffSchedule = 0;
 
     self._tasks = [];
     self._totalDuration = 0;
 
-    for(var i=0; i<taskList.length; i++) {
-        self._totalDuration += taskList[i].duration;
+    self._init = function() {
 
-        //Build an element to represent self task.
-        var task = new Task(taskList[i].duration, taskList[i].title, taskList[i].description, cfg);
-        self._tasks.push(task);
-        self._ele.appendChild(task.getElement());
-    }
+        //Create the overall progress bar.
+        self._progressBarElapsed = (new HtmlBuilder(null, "div"))
+                        .addClass("_elapsed").addClass("_prog").style("height", "0")
+                        .build();
+        self._progressBar = (new HtmlBuilder(null, "div"))
+                        .addClass("VerticalProgressBar").addClass("overall-progress")
+                        .add(self._progressBarElapsed)
+                        .build();
+        self._ele.appendChild(self._progressBar);
 
-    $(document).keydown(function(event) {
-        switch(event.which) {
-            case 32:    //space-bar
-                if(!self.isStarted()) {
-                    self.start();
-                }
-                else if(self.isRunning()) {
-                    self._next();
-                }
-                event.preventDefault();
-                event.stopPropagation();
-                break;
 
-            case 80:    //'p'
-                if(self.isPaused()) {
-                    self.resume();
-                } else if(self.isRunning()) {
-                    self.pause();
-                }
-                event.preventDefault();
-                event.stopPropagation();
-                break;
+        //Generate the task list.
+        var taskListBuilder = (new HtmlBuilder(null, "ol")).addClass("TaskList");
+        for(var i=0; i<taskList.length; i++) {
+            self._totalDuration += taskList[i].duration;
+
+            //Build an element to represent self task.
+            var task = new Task(taskList[i].duration, taskList[i].title, taskList[i].description, cfg);
+            self._tasks.push(task);
+            taskListBuilder.ele("li").add(task.getElement()).up();
         }
-    });
+
+        //Add the task list to the parent element.
+        self._ele.appendChild(taskListBuilder.build());
+
+        //Add key listeners.
+        $(document).keydown(function(event) {
+            switch(event.which) {
+                case 32:    //space-bar
+                    if(!self.isStarted()) {
+                        self.start();
+                    }
+                    else if(self.isRunning()) {
+                        self._next();
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    break;
+
+                case 80:    //'p'
+                    if(self.isPaused()) {
+                        self.resume();
+                    } else if(self.isRunning()) {
+                        self.pause();
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    break;
+            }
+        });
+    };
 
     /**
      * returns the total number of seconds that you've been in the current task.
@@ -301,6 +322,14 @@ var Agenda = function(taskList, cfg, ele) {
             return self._pastTimeInTask;
         }
         return self._pastTimeInTask + parseFloat((new Date() - self._runningSince)) / 1000.0;
+    };
+
+    self.getOffSchedule = function() {
+        var offInTask = self._currentTask.getDuration() - self.getTimeInTask();
+        if(offInTask < 0) {
+            return self._pastOffSchedule + offInTask;
+        }
+        return self._pastOffSchedule;
     };
 
     /**
@@ -335,6 +364,8 @@ var Agenda = function(taskList, cfg, ele) {
         self._pastTimeInTask = 0;
             
         self._calculateWeights();
+
+        self._pastOffSchedule = 0;
 
         //Kick off the run.
         self._state = "running";
@@ -437,6 +468,8 @@ var Agenda = function(taskList, cfg, ele) {
             }
         }
     };
+
+    self._init();
 
 };
 
