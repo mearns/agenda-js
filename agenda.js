@@ -23,7 +23,7 @@ var onload = function() {
         }
     };
 
-    (new Agenda(agenda, cfg, document.getElementById("agenda"))).start();
+    (new Agenda(agenda, cfg, document.getElementById("agenda")));
 }
 
 var Task = function(duration, title, description, cfg) {
@@ -254,6 +254,7 @@ var Agenda = function(taskList, cfg, ele) {
     self._pastRunTime = 0;
     self._pastTimeInTask = 0;
     self._runningSince = null;
+    self._state = "stopped";
 
     self._tasks = [];
     self._totalDuration = 0;
@@ -270,11 +271,21 @@ var Agenda = function(taskList, cfg, ele) {
     $(document).keydown(function(event) {
         switch(event.which) {
             case 32:    //space-bar
-                if(!self.isRunning()) {
+                if(!self.isStarted()) {
                     self.start();
                 }
-                else {
+                else if(self.isRunning()) {
                     self._next();
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+
+            case 80:    //'p'
+                if(self.isPaused()) {
+                    self.resume();
+                } else if(self.isRunning()) {
+                    self.pause();
                 }
                 event.preventDefault();
                 event.stopPropagation();
@@ -300,8 +311,16 @@ var Agenda = function(taskList, cfg, ele) {
     };
 
     self.isRunning = function() {
-        return self._runningSince !== null;
+        return self._state == "running";
     };
+
+    self.isStarted = function() {
+        return self._state == "running" || self._state == "paused";
+    };
+
+    self.isPaused = function() {
+        return self._state == "paused";
+    }
 
     self.start = function() {
         self._runningSince = new Date();
@@ -318,7 +337,25 @@ var Agenda = function(taskList, cfg, ele) {
         self._calculateWeights();
 
         //Kick off the run.
+        self._state = "running";
         self._timer = setInterval(self._tick, self._rate);
+    };
+
+    self.pause = function() {
+        clearInterval(self._timer);
+        if(self._runningSince !== null) {
+            self._pastTimeInTask += parseFloat(new Date() - self._runningSince) / 1000.0;
+            self._runningSince = null;
+        }
+        self._state = "paused";
+    };
+
+    self.resume = function() {
+        if(self.isPaused()) {
+            self._state = "running";
+            self._runningSince = new Date();
+            self._timer = setInterval(self._tick, self._rate);
+        }
     };
 
     self._next = function() {
@@ -354,6 +391,7 @@ var Agenda = function(taskList, cfg, ele) {
         } else {
             clearInterval(self._timer);
             self._runningSince = null;
+            self._state = "stopped";
             console.log("Done");
         }
     };
