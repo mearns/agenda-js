@@ -254,12 +254,20 @@ var Agenda = function(taskList, cfg, ele) {
     self._init = function() {
 
         //Create the overall progress bar.
+        self._progressBarDebt = (new HtmlBuilder(null, "div"))
+                        .addClass("_debt").addClass("_prog").style("height", "0")
+                        .build();
         self._progressBarElapsed = (new HtmlBuilder(null, "div"))
                         .addClass("_elapsed").addClass("_prog").style("height", "0")
                         .build();
+        self._progressBarBonus = (new HtmlBuilder(null, "div"))
+                        .addClass("_bonus").addClass("_prog").style("height", "0")
+                        .build();
         self._progressBar = (new HtmlBuilder(null, "div"))
                         .addClass("VerticalProgressBar").addClass("overall-progress")
+                        .add(self._progressBarDebt)
                         .add(self._progressBarElapsed)
+                        .add(self._progressBarBonus)
                         .build();
         self._ele.appendChild(self._progressBar);
 
@@ -394,6 +402,10 @@ var Agenda = function(taskList, cfg, ele) {
         //Add into total runtime accumulator.
         self._pastRunTime += prevRunTime;
 
+        //And total off-schedule time
+        var prevOffSchedule = self._currentTask.getDuration() - prevRunTime;
+        self._pastOffSchedule += prevOffSchedule;
+
         self._currentTask.deselected();
 
         //Select the next task.
@@ -452,6 +464,13 @@ var Agenda = function(taskList, cfg, ele) {
         } else {
             height = (pct * 100.0) + '%';
         }
+
+        var offSchedule = self.getOffSchedule();
+        if(offSchedule < 0) {
+            //debt
+            //XXX: update the _progressBarDebt height. Then do bonus, too.
+        }
+
         self._progressBarElapsed.style.height = height;
     };
 
