@@ -1,8 +1,8 @@
 
 var agenda = [
-    {duration: 1, title: "First Task"},
-    {duration: 2, title: "Second Task"},
-    {duration: 2, title: "Third Task"},
+    {duration: 4, title: "First Task"},
+    {duration: 4, title: "Second Task"},
+    {duration: 4, title: "Third Task"},
 ];
 
 
@@ -12,20 +12,42 @@ var Task = function(duration, title, timeScale) {
 
     self._originalDuration = duration;
     self._duration = duration;
+    self._elapsedTime = 0;
     self._title = title;
     self._timeScale = timeScale;
-    self._progressBarFill = (new HtmlBuilder(null, "div"))
-                    .addClass("_prog").style("height", "0")
+    self._progressBarDebt = (new HtmlBuilder(null, "div"))
+                    .addClass("_debt").addClass("_prog").style("height", "0")
+                    .build();
+    self._progressBarElapsed = (new HtmlBuilder(null, "div"))
+                    .addClass("_elapsed").addClass("_prog").style("height", "0")
+                    .build();
+    self._progressBarConsumed = (new HtmlBuilder(null, "div"))
+                    .addClass("_bonus-consumed").addClass("_prog").style("height", "0")
+                    .build();
+    self._progressBarOver = (new HtmlBuilder(null, "div"))
+                    .addClass("_over").addClass("_prog").style("height", "0")
+                    .build();
+    self._progressBarRemaining = (new HtmlBuilder(null, "div"))
+                    .addClass("_remaining").addClass("_prog").style("height", "0")
+                    .build();
+    self._progressBarBonus = (new HtmlBuilder(null, "div"))
+                    .addClass("_bonus").addClass("_prog").style("height", "0")
                     .build();
     self._progressBar = (new HtmlBuilder(null, "div"))
                     .addClass("VerticalProgressBar")
-                    .add(self._progressBarFill)
+                    .add(self._progressBarDebt)
+                    .add(self._progressBarElapsed)
+                    .add(self._progressBarConsumed)
+                    .add(self._progressBarOver)
+                    .add(self._progressBarRemaining)
+                    .add(self._progressBarBonus)
                     .build();
+
     self._pctCompleteNode = document.createTextNode("-");
     self._ele = 
             new HtmlBuilder(null, "div")
                 .addClass("Task")
-                .style("height", (self._duration * self._timeScale) + 'px')
+                //.style("height", (self._duration * self._timeScale) + 'px')
                 .add(self._progressBar)
                 .ele("p").addClass("pct-complete")
                     .ele("span").add(self._pctCompleteNode).up()
@@ -39,24 +61,152 @@ var Task = function(duration, title, timeScale) {
     };
 
     self.setTimeElapsed = function(seconds) {
-        var pct = seconds / self._duration;
-        var height;
-        if(pct <= 0) {
-            height = '0';
-        } else if (pct >= 1) {
-            height = '100%';
-        } else {
-            height = (pct * 100) + '%'
-        }
+        self._elapsedTime = seconds;
+        self._update();
+    }
 
-        self._pctCompleteNode.nodeValue = parseInt(pct * 100) + '%';
-            
-        self._progressBarFill.style.height = height;
+    /**
+     * Sets the duration of the task. If this is less than the original, we assume
+     * there is some debt to be paid. If this is more, than there is surplus time.
+     */
+    self.setDuration = function(duration) {
+        self._duration = duration;
+        self._update();
+        //self._ele.style.height = (self._duration * timeScale) + 'px';
     };
 
-    self.setAvailableDuration = function(duration) {
-        self._duration = duration;
-        self._ele.style.height = (self._duration * timeScale) + 'px';
+    self._update = function() {
+        var pctCompelte = self._elapsedTime / self._duration;
+        self._pctCompleteNode.nodeValue = parseInt(pctCompelte * 100) + '%';
+
+        var bonus = 0;
+        var debt = 0;
+        var tdelta = self._originalDuration - self._duration;
+        if(tdelta > 0) {
+            debt = tdelta;
+        }
+        else if(tdelta < 0) {
+            bonus = -tdelta;
+        }
+
+        //First set of cases, we have not yet exceeded our available duration
+        if(self._elapsedTime <= self._duration) {
+            if(tdelta == 0) {
+                //no debt, no bonus.
+                $(self._progressBarDebt).hide();
+                $(self._progressBarElapsed).show();
+                $(self._progressBarConsumed).hide();
+                $(self._progressBarOver).hide();
+                $(self._progressBarRemaining).show();
+                $(self._progressBarBonus).hide();
+
+                var pct = self._elapsedTime / self._originalDuration;
+                self._progressBarElapsed.style.height = (pct * 100.0) + '%'
+                self._progressBarRemaining.style.height = ((1-pct) * 100.0) + '%'
+            }
+            else if(tdelta > 0) {
+                //debt
+                $(self._progressBarDebt).show();
+                $(self._progressBarElapsed).show();
+                $(self._progressBarConsumed).hide();
+                $(self._progressBarOver).hide();
+                $(self._progressBarRemaining).show();
+                $(self._progressBarBonus).hide();
+
+                var pctDebt = debt  / self._originalDuration;
+                var pctElapsed = self._elapsedTime / self._originalDuration;
+                var pct = pctDebt + pctElapsed;
+                self._progressBarDebt.style.height = (pctDebt * 100.0) + '%'
+                self._progressBarElapsed.style.height = (pctElapsed * 100.0) + '%'
+                self._progressBarRemaining.style.height = ((1-pct) * 100.0) + '%'
+            }
+            else {
+                //bonus
+                var pctElapsed = self._elapsedTime / self._duration;
+
+                if(self._elapsedTime < self._originalDuration) {
+                    //have not yet consumed any bonus time.
+                    $(self._progressBarDebt).hide();
+                    $(self._progressBarElapsed).show();
+                    $(self._progressBarConsumed).hide();
+                    $(self._progressBarOver).hide();
+                    $(self._progressBarRemaining).show();
+                    $(self._progressBarBonus).show();
+
+                    var pctBonus = bonus / self._duration;
+                    var pct = pctElapsed + pctBonus
+                    self._progressBarElapsed.style.height = (pctElapsed * 100.0) + '%'
+                    self._progressBarRemaining.style.height = ((1-pct) * 100.0) + '%'
+                    self._progressBarBonus.style.height = (pctBonus * 100.0) + '%'
+                }
+                else {
+                    //Started consuming bonus time, but still within available time.
+                    $(self._progressBarDebt).hide();
+                    $(self._progressBarElapsed).show();
+                    $(self._progressBarConsumed).show();
+                    $(self._progressBarOver).hide();
+                    $(self._progressBarRemaining).hide();
+                    $(self._progressBarBonus).show();
+
+                    var remainingBonus = self._duration - self._elapsedTime;
+                    var pctBonus = remainingBonus / self._duration;
+                    var pct = pctElapsed + pctBonus
+                    self._progressBarElapsed.style.height = (pctElapsed * 100.0) + '%'
+                    self._progressBarConsumed.style.height = ((1-pct) * 100.0) + '%'
+                    self._progressBarBonus.style.height = (pctBonus * 100.0) + '%'
+                }
+            }
+        }
+        //Next set of cases, we've gone over time.
+        else {
+            if(tdelta == 0) {
+                //No debt, no bonus
+                $(self._progressBarDebt).hide();
+                $(self._progressBarElapsed).show();
+                $(self._progressBarConsumed).hide();
+                $(self._progressBarOver).show();
+                $(self._progressBarRemaining).hide();
+                $(self._progressBarBonus).hide();
+
+                var pct = self._duration / self._elapsedTime;
+                self._progressBarElapsed.style.height = (pct * 100.0) + '%';
+                self._progressBarOver.style.height = ((1.0 - pct) * 100.0) + '%';
+            }
+            else if (tdelta > 0) {
+                //debt
+                $(self._progressBarDebt).show();
+                $(self._progressBarElapsed).show();
+                $(self._progressBarConsumed).hide();
+                $(self._progressBarOver).show();
+                $(self._progressBarRemaining).hide();
+                $(self._progressBarBonus).hide();
+
+                var mx = self._elapsedTime + debt;
+                var pctDebt = debt / mx;
+                var pctElapsed = self._duration;
+                var pct = pctDebt + pctElapsed;
+                self._progressBarDebt.style.height = (pctDebt * 100.0) + '%';
+                self._progressBarElapsed.style.height = (pctElapsed * 100.0) + '%';
+                self._progressBarOver.style.height = ((1.0 - pct) * 100.0) + '%';
+            }
+            else {
+                //bonus
+                $(self._progressBarDebt).hide();
+                $(self._progressBarElapsed).show();
+                $(self._progressBarConsumed).show();
+                $(self._progressBarOver).show();
+                $(self._progressBarRemaining).hide();
+                $(self._progressBarBonus).hide();
+
+                var pctElapsed = self._originalDuration / self._elapsedTime;
+                var pctConsumed = bonus / self._elapsedTime;
+                var pct = pctElapsed + pctConsumed;
+                self._progressBarElapsed.style.height = (pctElapsed * 100.0) + '%';
+                self._progressBarConsumed.style.height = (pctConsumed * 100.0) + '%';
+                self._progressBarOver.style.height = ((1.0 - pct) * 100.0) + '%';
+            }
+        }
+
     };
     
     self.getDuration = function() {
@@ -70,7 +220,6 @@ var Agenda = function(taskList, ele) {
     self._totalHeight = 300;
     self._rate = 50;
     self._ele = ele;
-    self._pastDeficit = 0;
 
     self._pastRunTime = 0;
     self._pastTimeInTask = 0;
@@ -89,11 +238,6 @@ var Agenda = function(taskList, ele) {
         self._tasks.push(task);
         self._ele.appendChild(task.getElement());
     }
-
-    self._deficitEle = (new HtmlBuilder(null, "div"))
-        .addClass("Deficit").addClass("Task")
-        .style("height", "0")
-        .build();
 
     $(document).keydown(function(event) {
         switch(event.which) {
@@ -134,16 +278,12 @@ var Agenda = function(taskList, ele) {
 
         //Reset timing accumulators.
         self._pastRunTime = 0;
-        self._pastDeficit = 0;
 
         //select the current task.
         self._currentIdx = 0;
         self._currentTask = self._tasks[self._currentIdx];
         self._pastTimeInTask = 0;
             
-        //Place the deficit tracker with self task.
-        $(self._currentTask.getElement()).before(self._deficitEle);
-
         self._calculateWeights();
 
         //Kick off the run.
@@ -158,23 +298,22 @@ var Agenda = function(taskList, ele) {
         if(self._runningSince !== null) {
             prevRunTime += parseFloat(newRunTime - self._runningSince) / 1000.0;
         }
+        console.log("Total run time for task " + self._currentIdx + ":", prevRunTime);
+
+        self._updateRemainingTasks(prevRunTime);
 
         //Add into total runtime accumulator.
         self._pastRunTime += prevRunTime;
 
-        //Update deficit
-        var taskDeficit = (prevRunTime - self._currentTask.getDuration());
-        self._pastDeficit += taskDeficit;
+        //Select the next task.
         if (self._currentIdx+1 < self._tasks.length) {
+
             self._currentIdx++;
             self._currentTask = self._tasks[self._currentIdx];
 
             //Reset in-task timings.
             self._runningSince = newRunTime;
             self._pastTimeInTask = 0;
-
-            //Move the deficit tracker with self task.
-            $(self._currentTask.getElement()).before(self._deficitEle);
 
             //Update weights.
             self._calculateWeights();
@@ -198,36 +337,36 @@ var Agenda = function(taskList, ele) {
     };
 
     self._tick = function() {
-
         //How long have we been running in self task (since resume).
         var elapsedTime = self.getTimeInTask();
-
-        var pctTaskComplete = elapsedTime / self._currentTask.getDuration();
         self._currentTask.setTimeElapsed(elapsedTime);
+        
+        var timeForTask = Math.max(self._currentTask.getDuration(), elapsedTime);
+        console.log("Time for task " + self._currentIdx + ":", timeForTask + ": " + elapsedTime + ": " + self._currentTask.getDuration());
+        self._updateRemainingTasks(timeForTask);
+    };
 
-        //XXX: Next up, handle surplus time in next().
-
-        if(pctTaskComplete >= 1.0) {
-
-            //Update the deficit.
-            var taskDeficit = (elapsedTime - self._currentTask.getDuration());
-            var totalDeficit = self._pastDeficit + taskDeficit;
-            self._deficitEle.style.height = (totalDeficit * self._timeScale) + 'px';
-
-            //See how much time we have left in the whole presentation.
-            var timeRemaining = self._totalDuration - self.getTotalRunTime();
+    self._updateRemainingTasks = function(timeForTask) {
+        //See how much time we have left in the whole presentation (after this task).
+        if(self._currentIdx+1 < self._tasks.length) {
+            var timeRemaining = self._totalDuration - self._pastRunTime - timeForTask;
             if(timeRemaining > 0) {
-                //Divvy it up
+                //Divvy it up, as a form of divvying of the debt.
                 var total = 0;
                 for(var i=self._currentIdx+1; i<self._tasks.length-1; i++) {
                     var t = timeRemaining * self._weights[i - self._currentIdx - 1];
                     total += t;
-                    self._tasks[i].setAvailableDuration(t);
+                    self._tasks[i].setDuration(t);
                 }
-                self._tasks[self._tasks.length-1].setAvailableDuration(timeRemaining - total);
+                self._tasks[self._tasks.length-1].setDuration(timeRemaining - total);
+            } else {
+                //No time left in the entire agenda. Set all remaining tasks to 0.
+                for(var i=self._currentIdx+1; i<self._tasks.length; i++) {
+                    self._tasks[i].setDuration(0);
+                }
             }
         }
-    }
+    };
 
 };
 

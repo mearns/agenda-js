@@ -8,7 +8,7 @@ ul.Agenda {
 
 .Task {
     width: 100%;
-    height: 100%;
+    height: 100px;
     border:2px solid #999;
 }
 
@@ -26,11 +26,30 @@ ul.Agenda {
 
 .VerticalProgressBar ._prog {
     width: 100%;
+}
+
+.VerticalProgressBar ._prog._debt {
+    background: orange;
+}
+
+.VerticalProgressBar ._prog._elapsed {
     background: green;
 }
 
-.VerticalProgressBar._over ._prog {
+.VerticalProgressBar ._prog._bonus-consumed {
+    background: blue;
+}
+
+.VerticalProgressBar ._prog._over {
     background: red;
+}
+
+.VerticalProgressBar ._prog._remaining {
+    background: white;
+}
+
+.VerticalProgressBar ._prog._bonus {
+    background: cyan;
 }
 
 .Task h2 {
