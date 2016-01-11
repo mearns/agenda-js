@@ -4,15 +4,6 @@ var onload = function() {
         {duration: 4, title: "First Task", description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Suspendisse porttitor vehicula dui."},
         {duration: 4, title: "Second Task", description: "Quisque quis massa. Donec est. Sed vitae tellus ac libero tincidunt tempor."},
         {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
     ];
 
     var cfg = {
@@ -442,9 +433,26 @@ var Agenda = function(taskList, cfg, ele) {
         //How long have we been running in self task (since resume).
         var elapsedTime = self.getTimeInTask();
         self._currentTask.setTimeElapsed(elapsedTime);
+
+        //Update the overall progress bar.
+        self._updateOverallProgressBar();
         
+        //Update all the remaining tasks.
         var timeForTask = Math.max(self._currentTask.getDuration(), elapsedTime);
         self._updateRemainingTasks(timeForTask);
+    };
+
+    self._updateOverallProgressBar = function() {
+        var pct = self.getTotalRunTime() / self._totalDuration;
+        var height;
+        if (pct <= 0) {
+            height = '0';
+        } else if(pct >= 1.0) {
+            height = '100%';
+        } else {
+            height = (pct * 100.0) + '%';
+        }
+        self._progressBarElapsed.style.height = height;
     };
 
     self._updateRemainingTasks = function(timeForTask) {
