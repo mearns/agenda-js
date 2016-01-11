@@ -4,12 +4,29 @@ var onload = function() {
         {duration: 4, title: "First Task", description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Suspendisse porttitor vehicula dui."},
         {duration: 4, title: "Second Task", description: "Quisque quis massa. Donec est. Sed vitae tellus ac libero tincidunt tempor."},
         {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
     ];
 
-    (new Agenda(agenda, document.getElementById("agenda"))).start();
+    var cfg = {
+        tasks: {
+            thresholds: {
+                warning_time: 2
+            }
+        }
+    };
+
+    (new Agenda(agenda, cfg, document.getElementById("agenda"))).start();
 }
 
-var Task = function(duration, title, description, timeScale) {
+var Task = function(duration, title, description, cfg) {
 
     var self = this;
 
@@ -18,7 +35,6 @@ var Task = function(duration, title, description, timeScale) {
     self._elapsedTime = 0;
     self._title = title;
     self._description = description;
-    self._timeScale = timeScale;
     self._progressBarDebt = (new HtmlBuilder(null, "div"))
                     .addClass("_debt").addClass("_prog").style("height", "0")
                     .build();
@@ -211,7 +227,9 @@ var Task = function(duration, title, description, timeScale) {
     };
 
     self.selected = function() {
-        $(self.getElement()).addClass("_selected");
+        var el = self.getElement();
+        el.scrollIntoView({behavior: "smooth", block: "start"});
+        $(el).addClass("_selected");
     };
 
     self.deselected = function() {
@@ -225,12 +243,13 @@ var Task = function(duration, title, description, timeScale) {
     };
 }
 
-var Agenda = function(taskList, ele) {
+var Agenda = function(taskList, cfg, ele) {
 
     var self = this;
     self._totalHeight = 300;
     self._rate = 50;
     self._ele = ele;
+    self._cfg = cfg;
 
     self._pastRunTime = 0;
     self._pastTimeInTask = 0;
@@ -238,14 +257,12 @@ var Agenda = function(taskList, ele) {
 
     self._tasks = [];
     self._totalDuration = 0;
+
     for(var i=0; i<taskList.length; i++) {
         self._totalDuration += taskList[i].duration;
-    }
 
-    self._timeScale = self._totalHeight / self._totalDuration;
-    for(var i=0; i<taskList.length; i++) {
         //Build an element to represent self task.
-        var task = new Task(taskList[i].duration, taskList[i].title, taskList[i].description, self._timeScale);
+        var task = new Task(taskList[i].duration, taskList[i].title, taskList[i].description, cfg);
         self._tasks.push(task);
         self._ele.appendChild(task.getElement());
     }
@@ -259,6 +276,8 @@ var Agenda = function(taskList, ele) {
                 else {
                     self._next();
                 }
+                event.preventDefault();
+                event.stopPropagation();
                 break;
         }
     });
