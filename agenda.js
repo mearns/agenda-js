@@ -1,10 +1,13 @@
 
-var agenda = [
-    {duration: 4, title: "First Task", description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Suspendisse porttitor vehicula dui."},
-    {duration: 4, title: "Second Task", description: "Quisque quis massa. Donec est. Sed vitae tellus ac libero tincidunt tempor."},
-    {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
-];
+var onload = function() {
+    var agenda = [
+        {duration: 4, title: "First Task", description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Suspendisse porttitor vehicula dui."},
+        {duration: 4, title: "Second Task", description: "Quisque quis massa. Donec est. Sed vitae tellus ac libero tincidunt tempor."},
+        {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
+    ];
 
+    (new Agenda(agenda, document.getElementById("agenda"))).start();
+}
 
 var Task = function(duration, title, description, timeScale) {
 
@@ -206,6 +209,16 @@ var Task = function(duration, title, description, timeScale) {
         }
 
     };
+
+    self.selected = function() {
+        $(self.getElement()).addClass("_selected");
+    };
+
+    self.deselected = function() {
+        var $el = $(self.getElement());
+        $el.removeClass("_selected");
+        $el.addClass("_completed");
+    };
     
     self.getDuration = function() {
         return self._duration;
@@ -280,6 +293,7 @@ var Agenda = function(taskList, ele) {
         //select the current task.
         self._currentIdx = 0;
         self._currentTask = self._tasks[self._currentIdx];
+        self._currentTask.selected();
         self._pastTimeInTask = 0;
             
         self._calculateWeights();
@@ -302,11 +316,14 @@ var Agenda = function(taskList, ele) {
         //Add into total runtime accumulator.
         self._pastRunTime += prevRunTime;
 
+        self._currentTask.deselected();
+
         //Select the next task.
         if (self._currentIdx+1 < self._tasks.length) {
 
             self._currentIdx++;
             self._currentTask = self._tasks[self._currentIdx];
+            self._currentTask.selected();
 
             //Reset in-task timings.
             self._runningSince = newRunTime;
@@ -364,9 +381,5 @@ var Agenda = function(taskList, ele) {
         }
     };
 
-};
-
-var onload = function() {
-    (new Agenda(agenda, document.getElementById("agenda"))).start();
 };
 
