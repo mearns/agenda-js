@@ -1,12 +1,12 @@
 
 var agenda = [
-    {duration: 4, title: "First Task"},
-    {duration: 4, title: "Second Task"},
-    {duration: 4, title: "Third Task"},
+    {duration: 4, title: "First Task", description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Suspendisse porttitor vehicula dui."},
+    {duration: 4, title: "Second Task", description: "Quisque quis massa. Donec est. Sed vitae tellus ac libero tincidunt tempor."},
+    {duration: 4, title: "Third Task", description: "In faucibus lorem nec elit. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus."},
 ];
 
 
-var Task = function(duration, title, timeScale) {
+var Task = function(duration, title, description, timeScale) {
 
     var self = this;
 
@@ -14,6 +14,7 @@ var Task = function(duration, title, timeScale) {
     self._duration = duration;
     self._elapsedTime = 0;
     self._title = title;
+    self._description = description;
     self._timeScale = timeScale;
     self._progressBarDebt = (new HtmlBuilder(null, "div"))
                     .addClass("_debt").addClass("_prog").style("height", "0")
@@ -44,16 +45,18 @@ var Task = function(duration, title, timeScale) {
                     .build();
 
     self._pctCompleteNode = document.createTextNode("-");
+    self._timeRemainingNode = document.createTextNode(self._duration + "s");
     self._ele = 
             new HtmlBuilder(null, "div")
                 .addClass("Task")
-                //.style("height", (self._duration * self._timeScale) + 'px')
                 .add(self._progressBar)
-                .ele("p").addClass("pct-complete")
-                    .ele("span").add(self._pctCompleteNode).up()
+                .ele("ul").addClass("pct-complete")
+                    .ele("li").add(self._pctCompleteNode).up()
+                    .ele("li").add(self._timeRemainingNode).up()
                 .up()
                 .ele("h2").text(self._title).up()
-                .ele("h3").text(self._duration).up()
+                .ele("h3").text(self._duration + " sec").up()
+                .ele("p").text(self._description).up()
                 .build()
 
     self.getElement = function() {
@@ -72,12 +75,23 @@ var Task = function(duration, title, timeScale) {
     self.setDuration = function(duration) {
         self._duration = duration;
         self._update();
-        //self._ele.style.height = (self._duration * timeScale) + 'px';
     };
 
     self._update = function() {
         var pctCompelte = self._elapsedTime / self._duration;
-        self._pctCompleteNode.nodeValue = parseInt(pctCompelte * 100) + '%';
+        var timeRemaining = self._duration - self._elapsedTime;
+        if(self._elapsedTime <= self._duration) {
+            self._pctCompleteNode.nodeValue = parseInt(pctCompelte * 100) + '% complete';
+            if(timeRemaining < 1) {
+                self._timeRemainingNode.nodeValue = "<1s remaining";
+            } else {
+                self._timeRemainingNode.nodeValue = parseInt(timeRemaining) + "s remaining";
+            }
+        }
+        else {
+            self._pctCompleteNode.nodeValue = "+" + parseInt(pctCompelte * 100)-100 + '% over';
+            self._timeRemainingNode.nodeValue = parseInt(-timeRemaining) + "s over";
+        }
 
         var bonus = 0;
         var debt = 0;
@@ -234,7 +248,7 @@ var Agenda = function(taskList, ele) {
     self._timeScale = self._totalHeight / self._totalDuration;
     for(var i=0; i<taskList.length; i++) {
         //Build an element to represent self task.
-        var task = new Task(taskList[i].duration, taskList[i].title, self._timeScale);
+        var task = new Task(taskList[i].duration, taskList[i].title, taskList[i].description, self._timeScale);
         self._tasks.push(task);
         self._ele.appendChild(task.getElement());
     }

@@ -68,6 +68,12 @@ ul.Agenda {
 
 .Task .pct-complete {
     float: right;
+    padding: 0;
+    margin: 1ex 1em;
 }
 
+.Task .pct-complete li {
+    list-style: none;
+    text-align: right;
+}
 
