@@ -105,12 +105,12 @@ var Task = function(duration, title, description, timeScale) {
 
         //First set of cases, we have not yet exceeded our available duration
         if(self._elapsedTime <= self._duration) {
+            $(self._progressBarOver).hide();
+
             if(tdelta == 0) {
                 //no debt, no bonus.
                 $(self._progressBarDebt).hide();
-                $(self._progressBarElapsed).show();
                 $(self._progressBarConsumed).hide();
-                $(self._progressBarOver).hide();
                 $(self._progressBarRemaining).show();
                 $(self._progressBarBonus).hide();
 
@@ -121,9 +121,7 @@ var Task = function(duration, title, description, timeScale) {
             else if(tdelta > 0) {
                 //debt
                 $(self._progressBarDebt).show();
-                $(self._progressBarElapsed).show();
                 $(self._progressBarConsumed).hide();
-                $(self._progressBarOver).hide();
                 $(self._progressBarRemaining).show();
                 $(self._progressBarBonus).hide();
 
@@ -135,15 +133,14 @@ var Task = function(duration, title, description, timeScale) {
                 self._progressBarRemaining.style.height = ((1-pct) * 100.0) + '%'
             }
             else {
+                $(self._progressBarDebt).hide();
+                $(self._progressBarBonus).show();
+
                 //bonus
                 if(self._elapsedTime < self._originalDuration) {
                     //have not yet consumed any bonus time.
-                    $(self._progressBarDebt).hide();
-                    $(self._progressBarElapsed).show();
                     $(self._progressBarConsumed).hide();
-                    $(self._progressBarOver).hide();
                     $(self._progressBarRemaining).show();
-                    $(self._progressBarBonus).show();
 
                     var pctElapsed = self._elapsedTime / self._duration;
                     var pctBonus = bonus / self._duration;
@@ -154,12 +151,8 @@ var Task = function(duration, title, description, timeScale) {
                 }
                 else {
                     //Started consuming bonus time, but still within available time.
-                    $(self._progressBarDebt).hide();
-                    $(self._progressBarElapsed).show();
                     $(self._progressBarConsumed).show();
-                    $(self._progressBarOver).hide();
                     $(self._progressBarRemaining).hide();
-                    $(self._progressBarBonus).show();
 
                     var pctElapsed = self._originalDuration / self._duration;
                     var remainingBonus = self._duration - self._elapsedTime;
@@ -173,14 +166,13 @@ var Task = function(duration, title, description, timeScale) {
         }
         //Next set of cases, we've gone over time.
         else {
+            $(self._progressBarOver).show();
+            $(self._progressBarRemaining).hide();
+            $(self._progressBarBonus).hide();
             if(tdelta == 0) {
                 //No debt, no bonus
                 $(self._progressBarDebt).hide();
-                $(self._progressBarElapsed).show();
                 $(self._progressBarConsumed).hide();
-                $(self._progressBarOver).show();
-                $(self._progressBarRemaining).hide();
-                $(self._progressBarBonus).hide();
 
                 var pct = self._duration / self._elapsedTime;
                 self._progressBarElapsed.style.height = (pct * 100.0) + '%';
@@ -189,11 +181,7 @@ var Task = function(duration, title, description, timeScale) {
             else if (tdelta > 0) {
                 //debt
                 $(self._progressBarDebt).show();
-                $(self._progressBarElapsed).show();
                 $(self._progressBarConsumed).hide();
-                $(self._progressBarOver).show();
-                $(self._progressBarRemaining).hide();
-                $(self._progressBarBonus).hide();
 
                 var mx = self._elapsedTime + debt;
                 var pctDebt = debt / mx;
@@ -206,11 +194,7 @@ var Task = function(duration, title, description, timeScale) {
             else {
                 //bonus
                 $(self._progressBarDebt).hide();
-                $(self._progressBarElapsed).show();
                 $(self._progressBarConsumed).show();
-                $(self._progressBarOver).show();
-                $(self._progressBarRemaining).hide();
-                $(self._progressBarBonus).hide();
 
                 var pctElapsed = self._originalDuration / self._elapsedTime;
                 var pctConsumed = bonus / self._elapsedTime;
