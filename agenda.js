@@ -122,8 +122,6 @@ var Task = function(duration, title, timeScale) {
             }
             else {
                 //bonus
-                var pctElapsed = self._elapsedTime / self._duration;
-
                 if(self._elapsedTime < self._originalDuration) {
                     //have not yet consumed any bonus time.
                     $(self._progressBarDebt).hide();
@@ -133,6 +131,7 @@ var Task = function(duration, title, timeScale) {
                     $(self._progressBarRemaining).show();
                     $(self._progressBarBonus).show();
 
+                    var pctElapsed = self._elapsedTime / self._duration;
                     var pctBonus = bonus / self._duration;
                     var pct = pctElapsed + pctBonus
                     self._progressBarElapsed.style.height = (pctElapsed * 100.0) + '%'
@@ -148,6 +147,7 @@ var Task = function(duration, title, timeScale) {
                     $(self._progressBarRemaining).hide();
                     $(self._progressBarBonus).show();
 
+                    var pctElapsed = self._originalDuration / self._duration;
                     var remainingBonus = self._duration - self._elapsedTime;
                     var pctBonus = remainingBonus / self._duration;
                     var pct = pctElapsed + pctBonus
@@ -183,7 +183,7 @@ var Task = function(duration, title, timeScale) {
 
                 var mx = self._elapsedTime + debt;
                 var pctDebt = debt / mx;
-                var pctElapsed = self._duration;
+                var pctElapsed = self._duration / mx;
                 var pct = pctDebt + pctElapsed;
                 self._progressBarDebt.style.height = (pctDebt * 100.0) + '%';
                 self._progressBarElapsed.style.height = (pctElapsed * 100.0) + '%';
@@ -298,7 +298,6 @@ var Agenda = function(taskList, ele) {
         if(self._runningSince !== null) {
             prevRunTime += parseFloat(newRunTime - self._runningSince) / 1000.0;
         }
-        console.log("Total run time for task " + self._currentIdx + ":", prevRunTime);
 
         self._updateRemainingTasks(prevRunTime);
 
@@ -342,7 +341,6 @@ var Agenda = function(taskList, ele) {
         self._currentTask.setTimeElapsed(elapsedTime);
         
         var timeForTask = Math.max(self._currentTask.getDuration(), elapsedTime);
-        console.log("Time for task " + self._currentIdx + ":", timeForTask + ": " + elapsedTime + ": " + self._currentTask.getDuration());
         self._updateRemainingTasks(timeForTask);
     };
 
