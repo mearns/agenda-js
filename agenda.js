@@ -14,13 +14,22 @@ var Task = function(duration, title, timeScale) {
     self._duration = duration;
     self._title = title;
     self._timeScale = timeScale;
+    self._progressBarDelay = (new HtmlBuilder(null, "div"))
+                    .addClass("_delay").style("height", "0")
+                    .build();
     self._progressBarFill = (new HtmlBuilder(null, "div"))
                     .addClass("_prog").style("height", "0")
                     .build();
+    self._progressBarSurplus = (new HtmlBuilder(null, "div"))
+                    .addClass("_surplus").style("height", "0")
+                    .build();
     self._progressBar = (new HtmlBuilder(null, "div"))
                     .addClass("VerticalProgressBar")
+                    .add(self._progressBarDelay)
                     .add(self._progressBarFill)
+                    .add(self._progressBarSurplus)
                     .build();
+
     self._pctCompleteNode = document.createTextNode("-");
     self._ele = 
             new HtmlBuilder(null, "div")
